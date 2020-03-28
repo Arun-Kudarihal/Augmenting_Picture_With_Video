@@ -14,6 +14,7 @@
  */
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.ar.sceneform.plugin'
+apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion 28
@@ -52,13 +53,9 @@ dependencies {
 }
 
 
-
 sceneform.asset('sampledata/models/chroma_key_video.obj',
         'sampledata/models/chroma_key_video_material.mat',
         'sampledata/models/chroma_key_video.sfa',
         'src/main/assets/chroma_key_video')
 
-sceneform.asset('sampledata/models/hand.obj',
-        'default',
-        'sampledata/models/hand.sfa',
-        'src/main/assets/hand')
+

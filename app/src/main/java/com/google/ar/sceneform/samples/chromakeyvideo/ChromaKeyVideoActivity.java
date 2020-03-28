@@ -17,7 +17,6 @@ package com.google.ar.sceneform.samples.chromakeyvideo;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
 import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -30,15 +29,12 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.Toast;
+import android.widget.VideoView;
+
 import com.google.ar.core.Anchor;
 import com.google.ar.core.AugmentedImage;
 import com.google.ar.core.Frame;
-import com.google.ar.core.HitResult;
-import com.google.ar.core.Plane;
-import com.google.ar.core.PointCloud;
 import com.google.ar.core.Pose;
 import com.google.ar.core.TrackingState;
 import com.google.ar.sceneform.AnchorNode;
@@ -52,15 +48,13 @@ import com.google.ar.sceneform.rendering.ExternalTexture;
 import com.google.ar.sceneform.rendering.ModelRenderable;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.ux.ArFragment;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import static android.net.Uri.parse;
 
-/**
- * This is an example activity that shows how to display a video with chroma key filtering in
- * Sceneform.
- */
+import java.util.Collection;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.google.ar.sceneform.samples.chromakeyvideo.R.id.ux_fragment;
+
+
 public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.OnUpdateListener{
 
     private static final String TAG = ChromaKeyVideoActivity.class.getSimpleName();
@@ -69,12 +63,12 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
     private ArFragment arFragment;
     private Scene scene;
 
-    @Nullable private ModelRenderable videoRenderable,videoRenderable1;
+    @Nullable private ModelRenderable videoRenderable,videoRenderable1,videoRenderable2,videoRenderable3,videoRenderable4;
     //@Nullable private  ModelRenderable modelRenderable;
 
 
     private boolean isImageDetected = false;
-    private MediaPlayer mediaPlayer,mediaplayer1;
+    private MediaPlayer mediaPlayer,mediaPlayer1,mediaPlayer2,mediaPlayer3,mediaPlayer4;
 
     // The color to filter out of the video.
     private static final Color CHROMA_KEY_COLOR = new Color(0.1843f, 1.0f, 0.098f);
@@ -83,8 +77,8 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
     private static final float VIDEO_HEIGHT_METERS = 0.2f;
 
 
-    ExternalTexture mytexture,mytexture1;
-    ExternalTexture handtexture;
+    private ExternalTexture mytexture,mytexture1,mytexture2,mytexture3,mytexture4;
+    private ViewRenderable imageRenderable,imageRenderable1,imageRenderable2,imageRenderable3,imageRenderable4;
 
     @Override
     @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"})
@@ -97,33 +91,47 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
         }
 
         setContentView(R.layout.activity_video);
-        arFragment = (CustomArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
+        arFragment = (CustomArFragment) getSupportFragmentManager().findFragmentById(ux_fragment);
 
         // Create an ExternalTexture for displaying the contents of the video.
-        ExternalTexture texture = new ExternalTexture();
-        ExternalTexture texture1 = new ExternalTexture();
-        mytexture = texture;
-        mytexture1 = texture1;
+        mytexture = new ExternalTexture();
+        mytexture1 = new ExternalTexture();
+        mytexture2 = new ExternalTexture();
+        mytexture3 = new ExternalTexture();
+        mytexture4 = new ExternalTexture();
 
-        // Create an Android MediaPlayer to capture the video on the external texture's surface.
-        mediaPlayer = MediaPlayer.create(this, R.raw.short_clip);
-        mediaPlayer.setSurface(texture.getSurface());
+
+
+        mediaPlayer = MediaPlayer.create(this, R.raw.bridge);
+        mediaPlayer.setSurface(mytexture.getSurface());
         mediaPlayer.setLooping(false);
 
-        mediaplayer1 = MediaPlayer.create(this,R.raw.lion_chroma);
-        mediaplayer1.setSurface(texture1.getSurface());
-        mediaplayer1.setLooping(false);
 
-        // Create a renderable with a material that has a parameter of type 'samplerExternal' so that
-        // it can display an ExternalTexture. The material also has an implementation of a chroma key
-        // filter.
+        mediaPlayer1 = MediaPlayer.create(this, R.raw.crossings);
+        mediaPlayer1.setSurface(mytexture1.getSurface());
+        mediaPlayer1.setLooping(false);
+
+        mediaPlayer2 = MediaPlayer.create(this, R.raw.liberty);
+        mediaPlayer2.setSurface(mytexture2.getSurface());
+        mediaPlayer2.setLooping(false);
+
+        mediaPlayer3 = MediaPlayer.create(this, R.raw.marathon_course);
+        mediaPlayer3.setSurface(mytexture3.getSurface());
+        mediaPlayer3.setLooping(false);
+
+        mediaPlayer4 = MediaPlayer.create(this, R.raw.runners);
+        mediaPlayer4.setSurface(mytexture4.getSurface());
+        mediaPlayer4.setLooping(false);
+
+
+
         ModelRenderable.builder()
                 .setSource(this, R.raw.chroma_key_video)
                 .build()
                 .thenAccept(
                         renderable -> {
                             videoRenderable = renderable;
-                            renderable.getMaterial().setExternalTexture("videoTexture", texture);
+                            renderable.getMaterial().setExternalTexture("videoTexture", mytexture);
                             renderable.getMaterial().setFloat4("keyColor", CHROMA_KEY_COLOR);
                         })
                 .exceptionally(
@@ -139,10 +147,10 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
                 .setSource(this, R.raw.chroma_key_video)
                 .build()
                 .thenAccept(
-                        renderable -> {
-                            videoRenderable1 = renderable;
-                            renderable.getMaterial().setExternalTexture("videoTexture", texture1);
-                            renderable.getMaterial().setFloat4("keyColor", CHROMA_KEY_COLOR);
+                        renderable1 -> {
+                            videoRenderable1 = renderable1;
+                            renderable1.getMaterial().setExternalTexture("videoTexture", mytexture1);
+                            renderable1.getMaterial().setFloat4("keyColor", CHROMA_KEY_COLOR);
                         })
                 .exceptionally(
                         throwable -> {
@@ -153,11 +161,100 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
                             return null;
                         });
 
+        ModelRenderable.builder()
+                .setSource(this, R.raw.chroma_key_video)
+                .build()
+                .thenAccept(
+                        renderable2 -> {
+                            videoRenderable2 = renderable2;
+                            renderable2.getMaterial().setExternalTexture("videoTexture", mytexture2);
+                            renderable2.getMaterial().setFloat4("keyColor", CHROMA_KEY_COLOR);
+                        })
+                .exceptionally(
+                        throwable -> {
+                            Toast toast =
+                                    Toast.makeText(this, "Unable to load video renderable", Toast.LENGTH_LONG);
+                            toast.setGravity(Gravity.CENTER, 0, 0);
+                            toast.show();
+                            return null;
+                        });
+
+        ModelRenderable.builder()
+                .setSource(this, R.raw.chroma_key_video)
+                .build()
+                .thenAccept(
+                        renderable3 -> {
+                            videoRenderable3 = renderable3;
+                            renderable3.getMaterial().setExternalTexture("videoTexture", mytexture3);
+                            renderable3.getMaterial().setFloat4("keyColor", CHROMA_KEY_COLOR);
+                        })
+                .exceptionally(
+                        throwable -> {
+                            Toast toast =
+                                    Toast.makeText(this, "Unable to load video renderable", Toast.LENGTH_LONG);
+                            toast.setGravity(Gravity.CENTER, 0, 0);
+                            toast.show();
+                            return null;
+                        });
+
+        ModelRenderable.builder()
+                .setSource(this, R.raw.chroma_key_video)
+                .build()
+                .thenAccept(
+                        renderable4 -> {
+                            videoRenderable4 = renderable4;
+                            renderable4.getMaterial().setExternalTexture("videoTexture", mytexture4);
+                            renderable4.getMaterial().setFloat4("keyColor", CHROMA_KEY_COLOR);
+                        })
+                .exceptionally(
+                        throwable -> {
+                            Toast toast =
+                                    Toast.makeText(this, "Unable to load video renderable", Toast.LENGTH_LONG);
+                            toast.setGravity(Gravity.CENTER, 0, 0);
+                            toast.show();
+                            return null;
+                        });
+
+
+
+        ViewRenderable.builder()
+                .setView(this, R.layout.img_board)
+                .build()
+                .thenAccept(v_renderable -> imageRenderable = v_renderable);
+
+        ViewRenderable.builder()
+                .setView(this, R.layout.img_board)
+                .build()
+                .thenAccept(v_renderable1 -> imageRenderable1 = v_renderable1);
+
+        ViewRenderable.builder()
+                .setView(this, R.layout.img_board)
+                .build()
+                .thenAccept(v_renderable2 -> imageRenderable2 = v_renderable2);
+
+        ViewRenderable.builder()
+                .setView(this, R.layout.img_board)
+                .build()
+                .thenAccept(v_renderable3 -> imageRenderable3 = v_renderable3);
+        ViewRenderable.builder()
+                .setView(this, R.layout.img_board)
+                .build()
+                .thenAccept(v_renderable4 -> imageRenderable4 = v_renderable4);
+
+
+
+
+
+
         scene = arFragment.getArSceneView().getScene();
+        arFragment.getPlaneDiscoveryController().hide();
 
         scene.addOnUpdateListener(this::onUpdate);
 
     }
+
+
+    AugmentedImage image;
 
     public void onUpdate(FrameTime frameTime) {
 
@@ -170,174 +267,591 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
 
         Collection<AugmentedImage> augmentedImages = frame.getUpdatedTrackables(AugmentedImage.class);
 
-        for (AugmentedImage image : augmentedImages) {
+        for (AugmentedImage myimage : augmentedImages) {
 
-            if (image.getTrackingState() == TrackingState.TRACKING) {
+            if (myimage.getTrackingState() == TrackingState.TRACKING) {
 
-                if (image.getName().equals("image")) {
+                if (myimage.getName().equals("image")) {
 
                     isImageDetected = true;
 
-                    displayHand(image.createAnchor(image.getCenterPose()),image);
+
+                    Toast toast =
+                            Toast.makeText(this, "Image Detected!!", Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
+
+                    image = myimage;
+
+                    displayImages();
+
                     break;
                 }
             }
         }
     }
 
+    Node videoNode,videoNode1,videoNode2,videoNode3,videoNode4;
+    Anchor extAnchor,extAnchor1,extAnchor2,extAnchor3,extAnchor4;
+    AnchorNode extAnchorNode,extAnchorNode1,extAnchorNode2,extAnchorNode3,extAnchorNode4;
+    AnchorNode imageNode,imageNode1,imageNode2,imageNode3,imageNode4;
 
-    private void displayHand(Anchor anchor,AugmentedImage image) {
+    public void displayImages(){
 
+        Pose offset1 = image.getCenterPose().compose(Pose.makeTranslation(0.1f,0f,0f));
+        Pose offset2 = image.getCenterPose().compose(Pose.makeTranslation(-0.08f,0f,0f));
+        Pose offset3 = image.getCenterPose().compose(Pose.makeTranslation(0.04f,0f,-0.01f));
+        Pose offset4 = image.getCenterPose().compose(Pose.makeTranslation(0f,0f,0.03f));
 
-        Pose offset1 = anchor.getPose().compose(Pose.makeTranslation(0.1f,0f,0f));
+        extAnchor = image.createAnchor(image.getCenterPose());
+        extAnchor1 = image.createAnchor(offset1);
+        extAnchor2 = image.createAnchor(offset2);
+        extAnchor3 = image.createAnchor(offset3);
+        extAnchor4 = image.createAnchor(offset4);
 
-        Anchor anchor1 = image.createAnchor(offset1);
-
-
-        ModelRenderable.builder().setSource(this, Uri.parse("hand.sfb")).build().thenAccept(modelRenderable1 -> placeModel1(modelRenderable1,anchor1));
-        ModelRenderable.builder().setSource(this, Uri.parse("hand.sfb")).build().thenAccept(modelRenderable -> placeModel(modelRenderable,anchor));
+        displayHandImage();
+        displayHandImage1();
+        displayHandImage2();
+        displayHandImage3();
+        displayHandImage4();
 
     }
 
-    //Anchor centeranchor;
 
-    private void placeModel(ModelRenderable modelRenderable, Anchor anchor)
-    {
+    private void displayHandImage(){
 
-        AnchorNode anchorNode = new AnchorNode(anchor);
-        //centeranchor = anchor;
-        anchorNode.setRenderable(modelRenderable);
-        anchorNode.setLocalScale(new Vector3(0.01f,0.01f,0.01f));
+        float qx,qy,qz,qw;
 
+        Pose imgpose = extAnchor.getPose();
+        qx = imgpose.qw();
+        qy = imgpose.qy();
+        qz = imgpose.qz();
+        qw = imgpose.qw();
+        Log.i(TAG, "qx: " + qx + "qy: " + qy + "qz: " + qz + "qw: " + qw);
 
+        Pose offset = extAnchor.getPose().compose(Pose.makeRotation(qx,qy,qz,qw));
+        Anchor anchor1 = image.createAnchor(offset);
+        //AnchorNode imageNode = new AnchorNode(anchor1);
+        if(imageNode==null)
+        imageNode = new AnchorNode(anchor1);
 
-           anchorNode.setOnTapListener((HitTestResult hitresult, MotionEvent motionevent) -> {
+        imageNode.setRenderable(imageRenderable);
+        imageNode.setLocalScale(new Vector3(0.01f,0.01f,0.01f));
 
-               playVideo(modelRenderable, anchor);
+        if(!imageNode.isDescendantOf(arFragment.getArSceneView().getScene()))
+        imageNode.setParent(arFragment.getArSceneView().getScene());
 
-               removeAnchoreNode(anchorNode);
-           });
-           arFragment.getArSceneView().getScene().addChild(anchorNode);
-    }
+        imageNode.setOnTapListener((HitTestResult hitresult, MotionEvent motionevent) -> {
 
-    private void placeModel1(ModelRenderable modelRenderable, Anchor anchor)
-    {
-        AnchorNode anchorNode = new AnchorNode(anchor);
-        //centeranchor = anchor;
-        anchorNode.setRenderable(modelRenderable);
-        anchorNode.setLocalScale(new Vector3(0.01f,0.01f,0.01f));
+            playVideoImage();
 
-
-
-        anchorNode.setOnTapListener((HitTestResult hitresult, MotionEvent motionevent) -> {
-
-            playVideo1(modelRenderable, anchor);
-
-            removeAnchoreNode(anchorNode);
+            arFragment.getArSceneView().getScene().removeChild(imageNode);
         });
-        arFragment.getArSceneView().getScene().addChild(anchorNode);
     }
 
-    private void removeAnchoreNode(AnchorNode anchorNode) {
+    private void displayHandImage1(){
 
-        arFragment.getArSceneView().getScene().removeChild(anchorNode);
+        float qx,qy,qz,qw;
 
+        Pose imgpose = extAnchor1.getPose();
+        qx = imgpose.qw();
+        qy = imgpose.qy();
+        qz = imgpose.qz();
+        qw = imgpose.qw();
+        Log.i(TAG, "qx: " + qx + "qy: " + qy + "qz: " + qz + "qw: " + qw);
+
+        Pose offset = extAnchor1.getPose().compose(Pose.makeRotation(qx,qy,qz,qw));
+        Anchor anchor1 = image.createAnchor(offset);
+
+        if(imageNode1==null)
+        imageNode1 = new AnchorNode(anchor1);
+
+        imageNode1.setRenderable(imageRenderable1);
+        imageNode1.setLocalScale(new Vector3(0.01f,0.01f,0.01f));
+
+        if(!imageNode1.isDescendantOf(arFragment.getArSceneView().getScene()))
+        imageNode1.setParent(arFragment.getArSceneView().getScene());
+
+        imageNode1.setOnTapListener((HitTestResult hitresult, MotionEvent motionevent) -> {
+
+            playVideoImage1();
+
+            arFragment.getArSceneView().getScene().removeChild(imageNode1);
+        });
+    }
+
+    private void displayHandImage2(){
+
+        float qx,qy,qz,qw;
+
+        Pose imgpose = extAnchor2.getPose();
+        qx = imgpose.qw();
+        qy = imgpose.qy();
+        qz = imgpose.qz();
+        qw = imgpose.qw();
+        Log.i(TAG, "qx: " + qx + "qy: " + qy + "qz: " + qz + "qw: " + qw);
+
+        Pose offset = extAnchor2.getPose().compose(Pose.makeRotation(qx,qy,qz,qw));
+        Anchor anchor1 = image.createAnchor(offset);
+
+        if(imageNode2==null)
+        imageNode2 = new AnchorNode(anchor1);
+
+        imageNode2.setRenderable(imageRenderable2);
+        imageNode2.setLocalScale(new Vector3(0.01f,0.01f,0.01f));
+
+        if(!imageNode2.isDescendantOf(arFragment.getArSceneView().getScene()))
+        imageNode2.setParent(arFragment.getArSceneView().getScene());
+
+        imageNode2.setOnTapListener((HitTestResult hitresult, MotionEvent motionevent) -> {
+
+            playVideoImage2();
+
+            arFragment.getArSceneView().getScene().removeChild(imageNode2);
+        });
+    }
+
+    private void displayHandImage3(){
+
+        float qx,qy,qz,qw;
+
+        Pose imgpose = extAnchor3.getPose();
+        qx = imgpose.qw();
+        qy = imgpose.qy();
+        qz = imgpose.qz();
+        qw = imgpose.qw();
+        Log.i(TAG, "qx: " + qx + "qy: " + qy + "qz: " + qz + "qw: " + qw);
+
+        Pose offset = extAnchor3.getPose().compose(Pose.makeRotation(qx,qy,qz,qw));
+        Anchor anchor1 = image.createAnchor(offset);
+
+        if(imageNode3==null)
+        imageNode3 = new AnchorNode(anchor1);
+
+        imageNode3.setRenderable(imageRenderable3);
+        imageNode3.setLocalScale(new Vector3(0.01f,0.01f,0.01f));
+
+        if(!imageNode3.isDescendantOf(arFragment.getArSceneView().getScene()))
+        imageNode3.setParent(arFragment.getArSceneView().getScene());
+
+        imageNode3.setOnTapListener((HitTestResult hitresult, MotionEvent motionevent) -> {
+
+            playVideoImage3();
+
+            arFragment.getArSceneView().getScene().removeChild(imageNode3);
+        });
+    }
+
+    private void displayHandImage4(){
+
+        float qx,qy,qz,qw;
+
+        Pose imgpose = extAnchor4.getPose();
+        qx = imgpose.qw();
+        qy = imgpose.qy();
+        qz = imgpose.qz();
+        qw = imgpose.qw();
+        Log.i(TAG, "qx: " + qx + "qy: " + qy + "qz: " + qz + "qw: " + qw);
+
+        Pose offset = extAnchor4.getPose().compose(Pose.makeRotation(qx,qy,qz,qw));
+        Anchor anchor1 = image.createAnchor(offset);
+
+        if(imageNode4==null)
+        imageNode4 = new AnchorNode(anchor1);
+
+        imageNode4.setRenderable(imageRenderable4);
+        imageNode4.setLocalScale(new Vector3(0.01f,0.01f,0.01f));
+
+        if(!imageNode4.isDescendantOf(arFragment.getArSceneView().getScene()))
+        imageNode4.setParent(arFragment.getArSceneView().getScene());
+
+        imageNode4.setOnTapListener((HitTestResult hitresult, MotionEvent motionevent) -> {
+
+            playVideoImage4();
+
+            arFragment.getArSceneView().getScene().removeChild(imageNode4);
+        });
     }
 
 
-    private void playVideo(ModelRenderable modelRenderable,Anchor anchor)
-    {
+    private void playVideoImage(){
 
-        mediaPlayer.start();
-        mediaPlayer.setLooping(false);
+        AtomicBoolean tapped = new AtomicBoolean(false);
+        stopOtherMedia("main");
 
 
-        AnchorNode anchorNode = new AnchorNode(anchor);
-        anchorNode.setParent(arFragment.getArSceneView().getScene());
+        extAnchorNode = new AnchorNode(extAnchor);
+        extAnchorNode.setParent(arFragment.getArSceneView().getScene());
 
-        Node videoNode = new Node();
-        videoNode.setParent(anchorNode);
+        if(videoNode==null)
+        videoNode = new Node();
+        videoNode.setParent(extAnchorNode);
 
-        float videoWidth = mediaPlayer.getVideoWidth();
-        float videoHeight = mediaPlayer.getVideoHeight();
-        videoNode.setLocalScale(
-                new Vector3(
-                        0.1f,0.1f,0.1f));
+        videoNode.setLocalScale(new Vector3(0.1f,0.15f,0.1f));
+
+        videoNode.setOnTapListener((HitTestResult hitresult, MotionEvent motionevent) -> {
+            stick_to_screen(R.raw.bridge);
+        });
+
+        mytexture
+                .getSurfaceTexture()
+                .setOnFrameAvailableListener(
+                        (SurfaceTexture surfaceTexture) -> {
+                            videoNode.setRenderable(videoRenderable);
+                            mytexture.getSurfaceTexture().setOnFrameAvailableListener(null);
+                        });
+
 
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
-                //mediaPlayer.release();
-                anchorNode.removeChild(videoNode);
-                placeModel(modelRenderable,anchor);
-
+                extAnchorNode.removeChild(videoNode);
+                displayHandImage();
+                //displayImages(image);
             }
         });
 
         if (!mediaPlayer.isPlaying()) {
             mediaPlayer.start();
-
-            mytexture
-                    .getSurfaceTexture()
-                    .setOnFrameAvailableListener(
-                            (SurfaceTexture surfaceTexture) -> {
-                                videoNode.setRenderable(videoRenderable);
-                                mytexture.getSurfaceTexture().setOnFrameAvailableListener(null);
-                            });
-
         }
         else {
             videoNode.setRenderable(videoRenderable);
         }
-
-        //scene.addChild(anchorNode);
-
     }
 
-    private void playVideo1(ModelRenderable modelRenderable, Anchor anchor)
-    {
+    private void playVideoImage1(){
 
+        AtomicBoolean tapped = new AtomicBoolean(false);
+        stopOtherMedia("one");
+        extAnchorNode1 = new AnchorNode(extAnchor1);
+        extAnchorNode1.setParent(arFragment.getArSceneView().getScene());
 
-        mediaplayer1.start();
-        mediaplayer1.setLooping(false);
+        if(videoNode1==null)
+        videoNode1 = new Node();
+        videoNode1.setParent(extAnchorNode1);
 
+        videoNode1.setLocalScale(new Vector3(0.1f,0.15f,0.1f));
 
-        AnchorNode anchorNode = new AnchorNode(anchor);
-        anchorNode.setParent(arFragment.getArSceneView().getScene());
+        videoNode1.setOnTapListener((HitTestResult hitresult, MotionEvent motionevent) -> {
 
-        Node videoNode = new Node();
-        videoNode.setParent(anchorNode);
+            stick_to_screen(R.raw.crossings);
 
-        float videoWidth = mediaplayer1.getVideoWidth();
-        float videoHeight = mediaplayer1.getVideoHeight();
-        videoNode.setLocalScale(
-                new Vector3(
-                        0.1f,0.1f,0.1f));
+        });
 
-        mediaplayer1.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+        mytexture1
+                .getSurfaceTexture()
+                .setOnFrameAvailableListener(
+                        (SurfaceTexture surfaceTexture) -> {
+                            videoNode1.setRenderable(videoRenderable1);
+                            mytexture1.getSurfaceTexture().setOnFrameAvailableListener(null);
+                        });
+
+        mediaPlayer1.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
-                //mediaPlayer.release();
-                anchorNode.removeChild(videoNode);
-                placeModel1(modelRenderable,anchor);
+                extAnchorNode1.removeChild(videoNode1);
+                displayHandImage1();
+            }
+        });
+
+        if (!mediaPlayer1.isPlaying()) {
+            mediaPlayer1.start();
+        }
+        else {
+            videoNode1.setRenderable(videoRenderable1);
+        }
+    }
+
+    private void playVideoImage2(){
+
+        AtomicBoolean tapped = new AtomicBoolean(false);
+        stopOtherMedia("two");
+
+        mediaPlayer2.start();
+        mediaPlayer2.setLooping(false);
+
+        extAnchorNode2 = new AnchorNode(extAnchor2);
+        extAnchorNode2.setParent(arFragment.getArSceneView().getScene());
+
+        if(videoNode2==null)
+        videoNode2 = new Node();
+        videoNode2.setParent(extAnchorNode2);
+
+        videoNode2.setLocalScale(new Vector3(0.1f,0.15f,0.1f));
+        videoNode2.setOnTapListener((HitTestResult hitresult, MotionEvent motionevent) -> {
+
+           stick_to_screen(R.raw.liberty);
+
+        });
+
+        mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                extAnchorNode2.removeChild(videoNode2);
+                displayHandImage2();
 
             }
         });
 
-        if (!mediaplayer1.isPlaying()) {
-            mediaplayer1.start();
+        if (!mediaPlayer2.isPlaying()) {
+            mediaPlayer2.start();
 
-            mytexture1
+            mytexture2
                     .getSurfaceTexture()
                     .setOnFrameAvailableListener(
                             (SurfaceTexture surfaceTexture) -> {
-                                videoNode.setRenderable(videoRenderable1);
-                                mytexture.getSurfaceTexture().setOnFrameAvailableListener(null);
+                                videoNode2.setRenderable(videoRenderable2);
+                                mytexture2.getSurfaceTexture().setOnFrameAvailableListener(null);
                             });
 
         }
         else {
-            videoNode.setRenderable(videoRenderable1);
+            videoNode2.setRenderable(videoRenderable2);
+        }
+    }
+
+    private void playVideoImage3(){
+
+        AtomicBoolean tapped = new AtomicBoolean(false);
+
+        stopOtherMedia("three");
+
+        mediaPlayer3.start();
+        mediaPlayer3.setLooping(false);
+
+
+        extAnchorNode3 = new AnchorNode(extAnchor3);
+        extAnchorNode3.setParent(arFragment.getArSceneView().getScene());
+
+        if(videoNode3==null)
+        videoNode3 = new Node();
+
+        videoNode3.setParent(extAnchorNode3);
+
+        videoNode3.setLocalScale(new Vector3(0.1f,0.15f,0.1f));
+
+        videoNode3.setOnTapListener((HitTestResult hitresult, MotionEvent motionevent) -> {
+
+            stick_to_screen(R.raw.marathon_course);
+
+        });
+
+        mediaPlayer3.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                extAnchorNode3.removeChild(videoNode3);
+                displayHandImage3();
+
+            }
+        });
+
+        if (!mediaPlayer3.isPlaying()) {
+            mediaPlayer3.start();
+
+            mytexture3
+                    .getSurfaceTexture()
+                    .setOnFrameAvailableListener(
+                            (SurfaceTexture surfaceTexture) -> {
+                                videoNode3.setRenderable(videoRenderable3);
+                                mytexture3.getSurfaceTexture().setOnFrameAvailableListener(null);
+                            });
+
+        }
+        else {
+            videoNode3.setRenderable(videoRenderable3);
+        }
+
+    }
+
+    private void playVideoImage4(){
+
+        AtomicBoolean tapped = new AtomicBoolean(false);
+
+        stopOtherMedia("four");
+
+        mediaPlayer4.start();
+        mediaPlayer4.setLooping(false);
+
+        extAnchorNode4 = new AnchorNode(extAnchor4);
+        extAnchorNode4.setParent(arFragment.getArSceneView().getScene());
+
+        if(videoNode4==null)
+        videoNode4 = new Node();
+        videoNode4.setParent(extAnchorNode4);
+
+        videoNode4.setLocalScale(new Vector3(0.1f,0.15f,0.1f));
+
+        videoNode4.setOnTapListener((HitTestResult hitresult, MotionEvent motionevent) -> {
+
+            stick_to_screen(R.raw.runners);
+
+        });
+
+        mediaPlayer4.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                extAnchorNode4.removeChild(videoNode4);
+                displayHandImage4();
+
+            }
+        });
+
+        if (!mediaPlayer4.isPlaying()) {
+            mediaPlayer4.start();
+
+            mytexture4
+                    .getSurfaceTexture()
+                    .setOnFrameAvailableListener(
+                            (SurfaceTexture surfaceTexture) -> {
+                                videoNode4.setRenderable(videoRenderable4);
+                                mytexture4.getSurfaceTexture().setOnFrameAvailableListener(null);
+                            });
+
+        }
+        else {
+            videoNode4.setRenderable(videoRenderable4);
+        }
+
+    }
+
+    public void stick_to_screen(int video_res){
+        VideoView playme = findViewById(R.id.video_card);
+        playme.setVideoURI(Uri.parse("android.resource://" + getPackageName() + "/" + video_res));
+        playme.setVisibility(View.VISIBLE);
+        playme.start();
+
+        playme.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                playme.setVisibility(View.GONE);
+            }
+        });
+
+        playme.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                if( motionEvent.getAction() == MotionEvent.ACTION_DOWN )
+                {
+                    playme.setVisibility(View.GONE);
+
+                }
+                return true;
+            }
+        });
+
+    }
+
+    public void stopOtherMedia(String name){
+
+        if(name.equals("main")){
+            if(videoNode1!=null &&  videoNode1.isDescendantOf(extAnchorNode1) && mediaPlayer1.isPlaying()){
+            extAnchorNode1.removeChild(videoNode1);
+            displayHandImage1();
+            }
+
+            if(videoNode2!=null &&   videoNode2.isDescendantOf(extAnchorNode2) && mediaPlayer2.isPlaying()) {
+                extAnchorNode2.removeChild(videoNode2);
+            displayHandImage2();
+            }
+
+            if(videoNode3!=null &&   videoNode3.isDescendantOf(extAnchorNode3) && mediaPlayer3.isPlaying()) {
+                extAnchorNode3.removeChild(videoNode3);
+                displayHandImage3();
+            }
+
+            if(videoNode4!=null &&  videoNode4.isDescendantOf(extAnchorNode4) && mediaPlayer4.isPlaying()) {
+                extAnchorNode4.removeChild(videoNode4);
+                displayHandImage4();
+            }
+
+        }
+
+        if(name.equals("one")){
+            if(videoNode!=null &&   videoNode.isDescendantOf(extAnchorNode) && mediaPlayer.isPlaying()){
+                extAnchorNode.removeChild(videoNode);
+                displayHandImage();
+            }
+
+            if(videoNode2!=null &&   videoNode2.isDescendantOf(extAnchorNode2) && mediaPlayer2.isPlaying()) {
+                extAnchorNode2.removeChild(videoNode2);
+                displayHandImage2();
+            }
+
+            if(videoNode3!=null &&  videoNode3.isDescendantOf(extAnchorNode3) && mediaPlayer3.isPlaying()) {
+                extAnchorNode3.removeChild(videoNode3);
+                displayHandImage3();
+            }
+
+            if(videoNode4!=null &&  videoNode4.isDescendantOf(extAnchorNode4) && mediaPlayer4.isPlaying()) {
+                extAnchorNode4.removeChild(videoNode4);
+                displayHandImage4();
+            }
+        }
+
+        if(name.equals("two")){
+            if(videoNode1!=null &&   videoNode1.isDescendantOf(extAnchorNode1) && mediaPlayer1.isPlaying()){
+                extAnchorNode1.removeChild(videoNode1);
+                displayHandImage1();
+            }
+
+            if(videoNode!=null &&   videoNode.isDescendantOf(extAnchorNode) && mediaPlayer.isPlaying()){
+                extAnchorNode.removeChild(videoNode);
+                displayHandImage();
+            }
+
+            if(videoNode3!=null &&   videoNode3.isDescendantOf(extAnchorNode3) && mediaPlayer3.isPlaying()) {
+                extAnchorNode3.removeChild(videoNode3);
+                displayHandImage3();
+            }
+
+            if(videoNode4!=null &&  videoNode4.isDescendantOf(extAnchorNode4) && mediaPlayer4.isPlaying()) {
+                extAnchorNode4.removeChild(videoNode4);
+                displayHandImage4();
+            }
+        }
+
+        if(name.equals("three")){
+            if(videoNode1!=null &&   videoNode1.isDescendantOf(extAnchorNode1) && mediaPlayer1.isPlaying()){
+                extAnchorNode1.removeChild(videoNode1);
+                displayHandImage1();
+            }
+
+            if(videoNode2!=null &&   videoNode2.isDescendantOf(extAnchorNode2) && mediaPlayer2.isPlaying()) {
+                extAnchorNode2.removeChild(videoNode2);
+                displayHandImage2();
+            }
+
+            if(videoNode!=null &&   videoNode.isDescendantOf(extAnchorNode) && mediaPlayer.isPlaying()){
+                extAnchorNode.removeChild(videoNode);
+                displayHandImage();
+            }
+
+            if(videoNode4!=null &&  videoNode4.isDescendantOf(extAnchorNode4) && mediaPlayer4.isPlaying()) {
+                extAnchorNode4.removeChild(videoNode4);
+                displayHandImage4();
+            }
+        }
+
+        if(name.equals("four")){
+            if(videoNode1!=null &&   videoNode1.isDescendantOf(extAnchorNode1) && mediaPlayer1.isPlaying()){
+                extAnchorNode1.removeChild(videoNode1);
+                displayHandImage1();
+            }
+
+            if(videoNode2!=null &&   videoNode2.isDescendantOf(extAnchorNode2) && mediaPlayer2.isPlaying()) {
+                extAnchorNode2.removeChild(videoNode2);
+                displayHandImage2();
+            }
+
+            if(videoNode3!=null &&   videoNode3.isDescendantOf(extAnchorNode3) && mediaPlayer3.isPlaying()) {
+                extAnchorNode3.removeChild(videoNode3);
+                displayHandImage3();
+            }
+
+            if(videoNode!=null &&   videoNode.isDescendantOf(extAnchorNode) && mediaPlayer.isPlaying()){
+                extAnchorNode.removeChild(videoNode);
+                displayHandImage();
+            }
         }
     }
 
@@ -348,8 +862,17 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
         if(mediaPlayer!=null){
             mediaPlayer.stop();
         }
-        if(mediaplayer1!=null){
-            mediaplayer1.stop();
+        if(mediaPlayer1!=null){
+            mediaPlayer1.stop();
+        }
+        if(mediaPlayer2!=null){
+            mediaPlayer2.stop();
+        }
+        if(mediaPlayer3!=null){
+            mediaPlayer3.stop();
+        }
+        if(mediaPlayer4!=null){
+            mediaPlayer4.stop();
         }
     }
 
@@ -362,10 +885,21 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
             mediaPlayer.reset();
             mediaPlayer = null;
         }
-        if (mediaplayer1 != null) {
-            mediaplayer1.reset();
-            mediaplayer1 = null;
-
+        if (mediaPlayer1 != null) {
+            mediaPlayer1.reset();
+            mediaPlayer1 = null;
+        }
+        if (mediaPlayer2 != null) {
+            mediaPlayer2.reset();
+            mediaPlayer2 = null;
+        }
+        if (mediaPlayer3 != null) {
+            mediaPlayer3.reset();
+            mediaPlayer3 = null;
+        }
+        if (mediaPlayer4 != null) {
+            mediaPlayer4.reset();
+            mediaPlayer4 = null;
         }
     }
 
@@ -399,7 +933,3 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
     }
 
 }
-
-
-
-

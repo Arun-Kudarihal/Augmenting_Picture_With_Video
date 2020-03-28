@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "671908914246",
+    "firebase_url": "https://malai-club.firebaseio.com",
+    "project_id": "malai-club",
+    "storage_bucket": "malai-club.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671908914246:android:26d4efbca0da628bcb9647",
+        "android_client_info": {
+          "package_name": "com.google.ar.sceneform.samples.chromakeyvideo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "671908914246-so3acdv96jaa68csk7flaaja6rln6uc1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.google.ar.sceneform.samples.chromakeyvideo",
+            "certificate_hash": "421de0ccfdbcce6284e19175c6e0bd80a7d41994"
+          }
+        },
+        {
+          "client_id": "671908914246-npqco6b60at49u5du3umn847e89oai3b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7HquNwAoyHm8EhEva5ScrA4LKmPhZ6tc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "671908914246-8m8ln7mae5hqh4nqo9hrgvqibcgnnao0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
