@@ -1158,7 +1158,6 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
         }
     }
 
-
     @Override
     public void onDestroy() {
         super.onDestroy();
