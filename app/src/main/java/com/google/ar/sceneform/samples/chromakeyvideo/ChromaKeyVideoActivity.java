@@ -63,12 +63,10 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
     private ArFragment arFragment;
     private Scene scene;
 
-    @Nullable private ModelRenderable videoRenderable,videoRenderable1,videoRenderable2,videoRenderable3,videoRenderable4,videoRenderable5;
-    //@Nullable private  ModelRenderable modelRenderable;
-
+    @Nullable private ModelRenderable videoRenderable,videoRenderable1,videoRenderable2,videoRenderable3,videoRenderable4;
 
     private boolean isImageDetected = false;
-    private MediaPlayer mediaPlayer,mediaPlayer1,mediaPlayer2,mediaPlayer3,mediaPlayer4,mediaPlayer5;
+    private MediaPlayer mediaPlayer,mediaPlayer1,mediaPlayer2,mediaPlayer3,mediaPlayer4;
 
     // The color to filter out of the video.
     private static final Color CHROMA_KEY_COLOR = new Color(0.1843f, 1.0f, 0.098f);
@@ -77,8 +75,8 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
     private static final float VIDEO_HEIGHT_METERS = 0.2f;
 
 
-    private ExternalTexture mytexture,mytexture1,mytexture2,mytexture3,mytexture4,mytexture5;
-    private ViewRenderable imageRenderable,imageRenderable1,imageRenderable2,imageRenderable3,imageRenderable4,imageRenderable5;
+    private ExternalTexture mytexture,mytexture1,mytexture2,mytexture3,mytexture4;
+    private ViewRenderable imageRenderable,imageRenderable1,imageRenderable2,imageRenderable3,imageRenderable4;
 
     @Override
     @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"})
@@ -93,13 +91,13 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
         setContentView(R.layout.activity_video);
         arFragment = (CustomArFragment) getSupportFragmentManager().findFragmentById(ux_fragment);
 
+        arFragment.getArSceneView().getPlaneRenderer().setVisible(false);
         // Create an ExternalTexture for displaying the contents of the video.
         mytexture = new ExternalTexture();
         mytexture1 = new ExternalTexture();
         mytexture2 = new ExternalTexture();
         mytexture3 = new ExternalTexture();
         mytexture4 = new ExternalTexture();
-        mytexture5 = new ExternalTexture();
 
 
 
@@ -220,24 +218,6 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
                             return null;
                         });
 
-        ModelRenderable.builder()
-                .setSource(this, R.raw.chroma_key_video)
-                .build()
-                .thenAccept(
-                        renderable5 -> {
-                            videoRenderable5 = renderable5;
-                            renderable5.getMaterial().setExternalTexture("videoTexture", mytexture5);
-                            renderable5.getMaterial().setFloat4("keyColor", CHROMA_KEY_COLOR);
-                        })
-                .exceptionally(
-                        throwable -> {
-                            Toast toast =
-                                    Toast.makeText(this, "Unable to load video renderable", Toast.LENGTH_LONG);
-                            toast.setGravity(Gravity.CENTER, 0, 0);
-                            toast.show();
-                            return null;
-                        });
-
 
 
         ViewRenderable.builder()
@@ -278,7 +258,7 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
 
 
 
-    AugmentedImage image,bib_image;
+    AugmentedImage image;
 
     public void onUpdate(FrameTime frameTime) {
 
@@ -299,7 +279,7 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
 
                     isImageDetected = true;
 
-                    initialise_media_players(R.raw.bridge,R.raw.crossings,R.raw.liberty,R.raw.marathon_course,R.raw.runners,0);
+                    initialise_media_players(R.raw.bridge,R.raw.crossings,R.raw.liberty,R.raw.marathon_course,R.raw.runners);
 
                     display_toast_message("Image Detected!!");
 
@@ -310,15 +290,15 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
                     break;
                 }
 
-                if(myimage.getName().equals("bib_image")){
+                if(myimage.getName().equals("bib1") || myimage.getName().equals("bib2") || myimage.getName().equals("bib3")){
 
                     isImageDetected = true;
 
-                    initialise_media_players(R.raw.lion_chroma,R.raw.lion_chroma,R.raw.lion_chroma,R.raw.lion_chroma,R.raw.lion_chroma,R.raw.lion_chroma);
+                    initialise_media_players(R.raw.lion_chroma,0,0,0,0);
 
                     display_toast_message("Bib image detected");
 
-                    bib_image = myimage;
+                    image = myimage;
                     display_Green_Screen();
                     break;
                 }
@@ -326,37 +306,58 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
         }
     }
 
-   public void initialise_media_players(int v,int v1,int v2,int v3,int v4,int v5){
+   public void initialise_media_players(int v,int v1,int v2,int v3,int v4){
 
-        mediaPlayer = MediaPlayer.create(this, v);
-        mediaPlayer.setSurface(mytexture.getSurface());
-        mediaPlayer.setLooping(false);
-
-
-        mediaPlayer1 = MediaPlayer.create(this, v1);
-        mediaPlayer1.setSurface(mytexture1.getSurface());
-        mediaPlayer1.setLooping(false);
-
-        mediaPlayer2 = MediaPlayer.create(this, v2);
-        mediaPlayer2.setSurface(mytexture2.getSurface());
-        mediaPlayer2.setLooping(false);
-
-        mediaPlayer3 = MediaPlayer.create(this, v3);
-        mediaPlayer3.setSurface(mytexture3.getSurface());
-        mediaPlayer3.setLooping(false);
-
-        mediaPlayer4 = MediaPlayer.create(this, v4);
-        mediaPlayer4.setSurface(mytexture4.getSurface());
-        mediaPlayer4.setLooping(false);
-
-        if(v5!=0) {
-            mediaPlayer5 = MediaPlayer.create(this, R.raw.lion_chroma);
-            mediaPlayer5.setSurface(mytexture5.getSurface());
-            mediaPlayer5.setLooping(false);
+        if(v!=0) {
+            mediaPlayer = MediaPlayer.create(this, v);
+            mediaPlayer.setSurface(mytexture.getSurface());
+            mediaPlayer.setLooping(false);
         }
+
+        if(v1!=0) {
+            mediaPlayer1 = MediaPlayer.create(this, v1);
+            mediaPlayer1.setSurface(mytexture1.getSurface());
+            mediaPlayer1.setLooping(false);
+        }
+
+        if(v2!=0) {
+            mediaPlayer2 = MediaPlayer.create(this, v2);
+            mediaPlayer2.setSurface(mytexture2.getSurface());
+            mediaPlayer2.setLooping(false);
+        }
+
+        if(v3!=0) {
+            mediaPlayer3 = MediaPlayer.create(this, v3);
+            mediaPlayer3.setSurface(mytexture3.getSurface());
+            mediaPlayer3.setLooping(false);
+        }
+
+       if(v4!=0) {
+           mediaPlayer4 = MediaPlayer.create(this, v4);
+           mediaPlayer4.setSurface(mytexture4.getSurface());
+           mediaPlayer4.setLooping(false);
+       }
     }
 
-    public void initialise_mytexture(){
+
+    Node videoNode,videoNode1,videoNode2,videoNode3,videoNode4;
+    Anchor extAnchor,extAnchor1,extAnchor2,extAnchor3,extAnchor4;
+    AnchorNode extAnchorNode,extAnchorNode1,extAnchorNode2,extAnchorNode3,extAnchorNode4;
+    AnchorNode imageNode,imageNode1,imageNode2,imageNode3,imageNode4;
+
+
+    public void display_Green_Screen(){
+
+        extAnchor = image.createAnchor(image.getCenterPose());
+        extAnchorNode = new AnchorNode(extAnchor);
+
+        extAnchorNode.setParent(arFragment.getArSceneView().getScene());
+
+        if(videoNode==null)
+            videoNode = new Node();
+        videoNode.setParent(extAnchorNode);
+
+        videoNode.setLocalScale(new Vector3(0.25f,0.15f,0.25f));
 
         mytexture
                 .getSurfaceTexture()
@@ -365,165 +366,12 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
                             videoNode.setRenderable(videoRenderable);
                             mytexture.getSurfaceTexture().setOnFrameAvailableListener(null);
                         });
-        mytexture1
-                .getSurfaceTexture()
-                .setOnFrameAvailableListener(
-                        (SurfaceTexture surfaceTexture) -> {
-                            videoNode1.setRenderable(videoRenderable1);
-                            mytexture1.getSurfaceTexture().setOnFrameAvailableListener(null);
-                        });
 
-        mytexture2
-                .getSurfaceTexture()
-                .setOnFrameAvailableListener(
-                        (SurfaceTexture surfaceTexture) -> {
-                            videoNode2.setRenderable(videoRenderable2);
-                            mytexture2.getSurfaceTexture().setOnFrameAvailableListener(null);
-                        });
-
-        mytexture3
-                .getSurfaceTexture()
-                .setOnFrameAvailableListener(
-                        (SurfaceTexture surfaceTexture) -> {
-                            videoNode3.setRenderable(videoRenderable3);
-                            mytexture3.getSurfaceTexture().setOnFrameAvailableListener(null);
-                        });
-        mytexture4
-                .getSurfaceTexture()
-                .setOnFrameAvailableListener(
-                        (SurfaceTexture surfaceTexture) -> {
-                            videoNode4.setRenderable(videoRenderable4);
-                            mytexture4.getSurfaceTexture().setOnFrameAvailableListener(null);
-                        });
-        mytexture5
-                .getSurfaceTexture()
-                .setOnFrameAvailableListener(
-                        (SurfaceTexture surfaceTexture) -> {
-                            videoNode5.setRenderable(videoRenderable5);
-                            mytexture5.getSurfaceTexture().setOnFrameAvailableListener(null);
-                        });
-    }
-
-
-    Node videoNode,videoNode1,videoNode2,videoNode3,videoNode4,videoNode5;
-    Anchor extAnchor,extAnchor1,extAnchor2,extAnchor3,extAnchor4,extAnchor5;
-    AnchorNode extAnchorNode,extAnchorNode1,extAnchorNode2,extAnchorNode3,extAnchorNode4,extAnchorNode5;
-    AnchorNode imageNode,imageNode1,imageNode2,imageNode3,imageNode4;
-
-
-    public void display_Green_Screen(){
-
-//        extAnchor5 = bib_image.createAnchor(bib_image.getCenterPose());
-        float horizontal_dist = 0.12f;
-        float vertical_dist = 0.07f;
-        Pose offset = bib_image.getCenterPose().compose(Pose.makeTranslation(-horizontal_dist,0f,-vertical_dist));
-        Pose offset1 = bib_image.getCenterPose().compose(Pose.makeTranslation(horizontal_dist,0f,vertical_dist));
-        Pose offset2 = bib_image.getCenterPose().compose(Pose.makeTranslation(-horizontal_dist,0f,vertical_dist));
-        Pose offset3 = bib_image.getCenterPose().compose(Pose.makeTranslation(horizontal_dist,0f,-vertical_dist));
-        Pose offset4 = bib_image.getCenterPose().compose(Pose.makeTranslation(0f,0f,vertical_dist));
-        Pose offset5 = bib_image.getCenterPose().compose(Pose.makeTranslation(0f,0f,-vertical_dist));
-
-        extAnchor = bib_image.createAnchor(offset);
-        extAnchor1 = bib_image.createAnchor(offset1);
-        extAnchor2 = bib_image.createAnchor(offset2);
-        extAnchor3 = bib_image.createAnchor(offset3);
-        extAnchor4 = bib_image.createAnchor(offset4);
-        extAnchor5 = bib_image.createAnchor(offset5);
-
-        extAnchorNode = new AnchorNode(extAnchor);
-        extAnchorNode1 = new AnchorNode(extAnchor1);
-        extAnchorNode2 = new AnchorNode(extAnchor2);
-        extAnchorNode3 = new AnchorNode(extAnchor3);
-        extAnchorNode4 = new AnchorNode(extAnchor4);
-        extAnchorNode5 = new AnchorNode(extAnchor5);
-        extAnchorNode.setParent(arFragment.getArSceneView().getScene());
-        extAnchorNode1.setParent(arFragment.getArSceneView().getScene());
-        extAnchorNode2.setParent(arFragment.getArSceneView().getScene());
-        extAnchorNode3.setParent(arFragment.getArSceneView().getScene());
-        extAnchorNode4.setParent(arFragment.getArSceneView().getScene());
-        extAnchorNode5.setParent(arFragment.getArSceneView().getScene());
-
-        if(videoNode==null)
-            videoNode = new Node();
-        if(videoNode1==null)
-            videoNode1 = new Node();
-        if(videoNode2==null)
-            videoNode2 = new Node();
-        if(videoNode3==null)
-            videoNode3 = new Node();
-        if(videoNode4==null)
-            videoNode4 = new Node();
-        if(videoNode5==null)
-            videoNode5 = new Node();
-
-
-        videoNode.setParent(extAnchorNode);
-        videoNode1.setParent(extAnchorNode1);
-        videoNode2.setParent(extAnchorNode2);
-        videoNode3.setParent(extAnchorNode3);
-        videoNode4.setParent(extAnchorNode4);
-        videoNode5.setParent(extAnchorNode5);
-
-
-        videoNode.setLocalScale(new Vector3(0.1f,0.1f,0.1f));
-        videoNode1.setLocalScale(new Vector3(0.1f,0.1f,0.1f));
-        videoNode2.setLocalScale(new Vector3(0.1f,0.1f,0.1f));
-        videoNode3.setLocalScale(new Vector3(0.1f,0.1f,0.1f));
-        videoNode4.setLocalScale(new Vector3(0.1f,0.1f,0.1f));
-        videoNode5.setLocalScale(new Vector3(0.1f,0.1f,0.1f));
-
-//        videoNode.setOnTapListener((HitTestResult hitresult, MotionEvent motionevent) -> {
-//            stick_to_screen(R.raw.bridge);
-//        });
-
-        initialise_mytexture();
 
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
-                display_toast_message("Completed green screen video");
                 extAnchorNode.removeChild(videoNode);
-                //displayImages(image);
-            }
-        });
-        mediaPlayer1.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                display_toast_message("Completed green screen video");
-                extAnchorNode1.removeChild(videoNode1);
-                //displayImages(image);
-            }
-        });
-        mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                display_toast_message("Completed green screen video");
-                extAnchorNode2.removeChild(videoNode2);
-                //displayImages(image);
-            }
-        });
-        mediaPlayer3.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                display_toast_message("Completed green screen video");
-                extAnchorNode3.removeChild(videoNode3);
-                //displayImages(image);
-            }
-        });
-        mediaPlayer4.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                display_toast_message("Completed green screen video");
-                extAnchorNode4.removeChild(videoNode4);
-                //displayImages(image);
-            }
-        });
-        mediaPlayer5.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                display_toast_message("Completed green screen video");
-                extAnchorNode5.removeChild(videoNode5);
-                //displayImages(image);
             }
         });
 
@@ -533,37 +381,10 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
         else {
             videoNode.setRenderable(videoRenderable);
         }
-        if (!mediaPlayer1.isPlaying()) {
-            mediaPlayer1.start();
-        }
-        else {
-            videoNode1.setRenderable(videoRenderable1);
-        }
-        if (!mediaPlayer2.isPlaying()) {
-            mediaPlayer2.start();
-        }
-        else {
-            videoNode2.setRenderable(videoRenderable2);
-        }
-        if (!mediaPlayer3.isPlaying()) {
-            mediaPlayer3.start();
-        }
-        else {
-            videoNode3.setRenderable(videoRenderable3);
-        }
-        if (!mediaPlayer4.isPlaying()) {
-            mediaPlayer4.start();
-        }
-        else {
-            videoNode5.setRenderable(videoRenderable5);
-        }
-        if (!mediaPlayer5.isPlaying()) {
-            mediaPlayer5.start();
-        }
-        else {
-            videoNode5.setRenderable(videoRenderable5);
-        }
+
     }
+
+
 
     public void display_toast_message(String message){
 
@@ -572,7 +393,6 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
         toast.show();
 
     }
-
 
 
     public void displayImages(){
@@ -1153,9 +973,6 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
         if(mediaPlayer4!=null){
             mediaPlayer4.stop();
         }
-        if(mediaPlayer5!=null){
-            mediaPlayer5.stop();
-        }
     }
 
     @Override
@@ -1181,10 +998,6 @@ public class ChromaKeyVideoActivity extends AppCompatActivity implements Scene.O
         if (mediaPlayer4 != null) {
             mediaPlayer4.reset();
             mediaPlayer4 = null;
-        }
-        if (mediaPlayer5 != null) {
-            mediaPlayer5.reset();
-            mediaPlayer5 = null;
         }
     }
 

@@ -30,10 +30,14 @@ public class CustomArFragment extends ArFragment{
         AugmentedImageDatabase aid = new AugmentedImageDatabase(session);
 
         Bitmap image = BitmapFactory.decodeResource(getResources(),R.drawable.mural);
-        Bitmap image2 = BitmapFactory.decodeResource(getResources(),R.drawable.bib_image);
+        Bitmap image1 = BitmapFactory.decodeResource(getResources(),R.drawable.bib1);
+        Bitmap image2 = BitmapFactory.decodeResource(getResources(),R.drawable.bib2);
+        Bitmap image3 = BitmapFactory.decodeResource(getResources(),R.drawable.bib3);
 
         aid.addImage("image",image,0.4f);
-        aid.addImage("bib_image",image2,0.4f);
+        aid.addImage("bib1",image1,0.4f);
+        aid.addImage("bib2",image2,0.4f);
+        aid.addImage("bib3",image3,0.4f);
 
         config.setAugmentedImageDatabase(aid);
         this.getArSceneView().setupSession(session);
